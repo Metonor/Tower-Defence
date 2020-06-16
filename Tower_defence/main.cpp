@@ -5,10 +5,11 @@
 class Global : public sf::Sprite{
 public:
     virtual void Animuj(sf::Time &elapsed)=0;
-    int x;
-    int y;
-    enum typ{Pacman,owoc,duch,Mapa};
+    float x;
+    float y;
+    enum typ{Pacman,Towers,Mobs,Mapa};
     int type;
+    int wave=0;
 
 };
 class PacMan : public Global
@@ -18,7 +19,7 @@ class PacMan : public Global
     {
         setTexture(a);
         setPosition(400,300);
-        x=1;
+        x=0;
         y=0;
         type = typ::Pacman;
         zycia=3;
@@ -52,56 +53,77 @@ class PacMan : public Global
 
     }
 };
-class Duch : public Global
+class Mobs : public Global
 {public:
-    Duch(sf::Texture &a)
+    int point=0;
+    int speed=50;
+    Mobs(sf::Texture &a)
     {
         setTexture(a);
-        setPosition(rand()%800,rand()%600);
-        x=(rand()%5-1)*25;
+        setPosition(-45,310);
+        x=(rand()%30)*3;
         y=0;
         setScale(1,1);
-        type = typ::duch;
+        type = typ::Mobs;
     }
     void Animuj(sf::Time &elapsed)
     {
-        move(x*elapsed.asSeconds(),y);
-        if(getGlobalBounds().left+getGlobalBounds().width>500)
-        {
-            x=-std::abs(x);
-        }
-        if(getGlobalBounds().left<0)
-        {
-            x=std::abs(x);
-        }
-        {
-            move(x*elapsed.asSeconds(),y*elapsed.asSeconds());
+
             auto object_bounds = this->getGlobalBounds();
-                if(object_bounds.left < 0)
+                if((object_bounds.left > 125)&& point==0)
                 {
-                    int ys = getPosition().y;
-                    setPosition(0,ys);
+                    x=0;
+                    y=-speed;
+                    point=1;
+
+                }
+                if((object_bounds.top < 130)&& point==1)
+                {
+                    x=speed;
+                    y=0;
+                    point=2;
+                }
+                if((object_bounds.left > 310)&& point==2)
+                {
+                    x=0;
+                    y=speed;
+                    point=3;
+                }
+                if((object_bounds.top > 370)&& point==3)
+                {
+                    x=speed;
+                    y=0;
+                    point=4;
                 }
 
-                if(object_bounds.left+object_bounds.width > 800)
+                if((object_bounds.left > 555)&& point==4)
                 {
-                    int ys = getPosition().y;
-                    setPosition(800,ys);
+                    x=0;
+                    y=-speed;
+                    point=5;
                 }
 
+                if((object_bounds.top < 260)&& point==5)
+                {
+                    x=speed;
+                    y=0;
+                    point=6;
+                }
 
+ move(x*elapsed.asSeconds(),y*elapsed.asSeconds());
         }
-    }
+
 };
-class Owoc:public Global
+class Towers:public Global
 {public:
-    Owoc(sf::Texture &a)
+    int ilosc=0;
+    Towers(sf::Texture &a)
     {
         setTexture(a);
-        setPosition(rand()%800,rand()%600);
-        y=5;
-        setScale(1,1);
-        type = typ::owoc;
+        x=0;
+        y=0;
+        setScale(0.5,0.5);
+        type = typ::Towers;
     }
     void Animuj(sf::Time &elapsed)
     {
@@ -139,15 +161,27 @@ public:
 int main()
 {
     srand(time(NULL));
-    int iloscspadania=3;
+
         sf::RenderWindow window(sf::VideoMode(800,600),"programik");
         window.setFramerateLimit(120);
         //      Tekstury
         sf::Texture map_tx;
         sf::Texture Duch_tx;
+        sf::Texture Knight_tx;
+        sf::Texture Slime_tx;
         sf::Texture Pacman_tx;
-        sf::Texture Owoc_tx;
+        sf::Texture Tower1_tx;
         if (!Duch_tx.loadFromFile("tekstury/duch.png"))
+        {
+            std::cerr << "Could not load texture" << std::endl;
+            return 1;
+        }
+        if (!Knight_tx.loadFromFile("tekstury/knight.png"))
+        {
+            std::cerr << "Could not load texture" << std::endl;
+            return 1;
+        }
+        if (!Slime_tx.loadFromFile("tekstury/slime.png"))
         {
             std::cerr << "Could not load texture" << std::endl;
             return 1;
@@ -157,7 +191,7 @@ int main()
             std::cerr << "Could not load texture" << std::endl;
             return 1;
         }
-        if (!Owoc_tx.loadFromFile("tekstury/owoc.png"))
+        if (!Tower1_tx.loadFromFile("tekstury/Mech1A.png"))
         {
             std::cerr << "Could not load texture" << std::endl;
             return 1;
@@ -175,22 +209,23 @@ int main()
 
         //
 
+        int tower_number = 0;
         PacMan hero(Pacman_tx);
         std::vector<std::unique_ptr<Global>> obiekty;
+        std::vector<std::unique_ptr<Towers>> towers;
         sf::Clock clock;
-     /*   for(int i=0;i<20;i++)
-        {
-            obiekty.emplace_back(new Duch(Duch_tx));
-
-        }
         for(int i=0;i<5;i++)
         {
-            obiekty.emplace_back(new Owoc(Owoc_tx));
+
+            obiekty.emplace_back(new Mobs(Duch_tx));
+
         }
-        */
-        int klatka = 0;
+
+
         while (window.isOpen())
             {
+
+
 
                 sf::Time elapsed = clock.restart();
                 sf::Event event;
@@ -198,28 +233,16 @@ int main()
                 {
                     if (event.type == sf::Event::Closed)
                         window.close();
-                }
-                auto p=obiekty.begin();
+
+
                 for(unsigned int i=0;i<obiekty.size();i++)
                 {
-                    if(event.mouseButton.button == sf::Mouse::Left)
-                    {
-                        sf::Vector2i mouse_pos = sf::Mouse::getPosition(window);
-                        if((mouse_pos.x > obiekty[i]->getGlobalBounds().left)&&(mouse_pos.x < obiekty[i]->getGlobalBounds().left + obiekty[i]->getGlobalBounds().width)&&(mouse_pos.y > obiekty[i]->getGlobalBounds().top)&&(mouse_pos.y < obiekty[i]->getGlobalBounds().top + obiekty[i]->getGlobalBounds().height))
-                            {
-                            float scale =1;
-                                if(obiekty[i]->type==Global::typ::duch)
-                                {
-
-                                }
-                                else
-                                {
-                                    scale+=1;
-                                    obiekty[i]->setScale(scale,scale);
-                                }
-
-                            }
+                    if (event.type == sf::Event::MouseButtonPressed) {
+                        if(event.mouseButton.button == sf::Mouse::Left) {
+                            sf::Vector2i mouse_pos = sf::Mouse::getPosition(window);
+                            std::cout << "Mouse clicked: " << mouse_pos.x << ", " << mouse_pos.y << std::endl;
                         }
+                    }
                 }
                /* p=obiekty.begin();
                 for(unsigned int i=0;i<obiekty.size();i++)
@@ -261,14 +284,20 @@ int main()
                     }
                 }
                 */
-                if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right))
+                if (event.type == sf::Event::MouseButtonPressed) {
+                    if(event.mouseButton.button == sf::Mouse::Right) {
                 {
-                    sf::Vector2f point(sf::Mouse::getPosition().x,sf::Mouse::getPosition().y);
-                    sf::Vector2f totalMovement(sf::Mouse::getPosition(window).x
-                        - hero.getPosition().x, sf::Mouse::getPosition(window).y - hero.getPosition().y);
+                    int a=0;
+                    sf::Vector2i mouse_pos = sf::Mouse::getPosition(window);
+                     towers.emplace_back(new Towers(Tower1_tx));
+                    towers[tower_number]->setPosition(mouse_pos.x,mouse_pos.y);
+                    std::cout<<"deploy";
+                    tower_number++;
 
-                    hero.move(totalMovement * (1.f / 30.f));
 
+
+                }
+                }
                 }
              /*   if(hero.zycia<=0)
                 {
@@ -287,6 +316,9 @@ int main()
                 window.draw(map1);
                 window.draw(hero);
                 hero.Animuj(elapsed);
+                for(unsigned int i=0;i<towers.size();i++){
+                    window.draw(*towers[i]);
+                }
                 for(unsigned int i=0;i<obiekty.size();i++)
                 {
                     window.draw(*obiekty[i]);
@@ -296,6 +328,7 @@ int main()
                     p->Animuj(elapsed);
                 }
                 window.display();
-                klatka++;
+
             }
+}
 }
