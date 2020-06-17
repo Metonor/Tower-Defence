@@ -8,66 +8,37 @@
 class Global : public sf::Sprite{
 public:
     virtual void Animuj(sf::Time &elapsed)=0;
+    virtual int  Get_HP()=0;
+    virtual void DMG()=0;
     float x;
     float y;
-    enum typ{Pacman,Towers,Mobs,Mapa};
+    int HP;
+    enum typ{Towers,Mobs,Mapa};
     int type;
-    int wave=0;
+
 
 };
-class PacMan : public Global
-{public:
 
-    PacMan(sf::Texture &a)
-    {
-        setTexture(a);
-        setPosition(400,300);
-        x=0;
-        y=0;
-        type = typ::Pacman;
-        zycia=3;
-        punkty=0;
-    }
-    int zycia;
-    int punkty;
-    void Animuj(sf::Time &elapsed)
-    {
-        move(x,y);
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::W))
-        {
-            y=-1;
-            x=0;
-        }
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::S))
-        {
-            y=1;
-            x=0;
-        }
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-        {
-            y=0;
-            x=-1;
-        }
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-        {
-            y=0;
-            x=1;
-        }
-
-    }
-};
 class Mobs : public Global
 {public:
     int point=0;
     int speed=50;
+    int HP=3;
     Mobs(sf::Texture &a)
     {
         setTexture(a);
         setPosition(-45,310);
         x=(rand()%30)*3;
         y=0;
+        HP=3;
         setScale(1,1);
         type = typ::Mobs;
+    }
+    int Get_HP(){
+        return HP;
+    }
+    void DMG(){
+        HP=HP-1;
     }
     void Animuj(sf::Time &elapsed)
     {
@@ -133,8 +104,16 @@ class Towers:public Global
     }
     void Animuj(sf::Time &elapsed)
     {
-        move(0,y*elapsed.asSeconds());
+
     }
+    int Get_HP(){
+
+    }
+    void DMG(){
+
+    }
+
+
 };
 
 class Mapa:public Global
@@ -148,6 +127,12 @@ public:
     }
     void Animuj(sf::Time &elapsed)
     {
+
+    }
+    int Get_HP(){
+
+    }
+    void DMG(){
 
     }
 
@@ -183,8 +168,9 @@ public:
 int main()
 {
     srand(time(NULL));
-    //Gold
+    //Gold Points And hp
     int gold=100;
+    int cost=100;
     std::cout<<gold;
     //
 
@@ -251,6 +237,7 @@ int main()
 
             obiekty.emplace_back(new Mobs(Duch_tx));
 
+
         }
 
 
@@ -302,7 +289,7 @@ int main()
 
 // Right click mouse
                 if (event.type == sf::Event::MouseButtonPressed) {
-                    if(event.mouseButton.button == sf::Mouse::Right && gold>=100) {
+                    if(event.mouseButton.button == sf::Mouse::Right && gold>=cost) {
 
 
                    sf::Vector2i mouse_pos = sf::Mouse::getPosition(window);
@@ -311,13 +298,15 @@ int main()
 
                     tower_number++;
                     gold=gold-100;
+                    cost=cost+30;
                     std::cout<<"Deploy!"<<std::endl<<gold<<std::endl;
 
 
                 }
                 }
-
-
+               // for(int c=0;c<obiekty.size();i++){
+              //  if(obiekty[c]->getGlobalBounds().intersects())
+//}
 
       }//Event while end
                 //ammo erase
@@ -335,12 +324,16 @@ int main()
                     {
                             if(ammo[i].bullet.getGlobalBounds().intersects(obiekty[k]->getGlobalBounds())){
                                 ammo.erase(ammo.begin()+i);
+                                obiekty[k]->DMG();
+                                if(obiekty[k]->Get_HP()==0){
                                 obiekty.erase(obiekty.begin()+k);
                                 gold=gold+20;
                                 std::cout<<"Zloto::"<<gold<<std::endl;
                                 break;
+                                }
+                                }
                             }
-                        }
+
 
                 }
                 }
@@ -348,8 +341,6 @@ int main()
                 window.clear();
                 //Draw
                 window.draw(map1);
-
-
                 for(unsigned int i=0;i<towers.size();i++){
                     window.draw(*towers[i]);
                 }
