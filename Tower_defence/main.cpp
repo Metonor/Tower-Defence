@@ -107,7 +107,7 @@ class Mobs : public Global
                 {
                     x=speed;
                     y=0;
-                    point=6;
+                    point=0;
                 }
 
  move(x*elapsed.asSeconds(),y*elapsed.asSeconds());
@@ -116,7 +116,7 @@ class Mobs : public Global
 };
 class Towers:public Global
 {public:
-    int ilosc=0;
+
     Towers(sf::Texture &a)
     {
         setTexture(a);
@@ -214,7 +214,7 @@ int main()
         std::vector<std::unique_ptr<Global>> obiekty;
         std::vector<std::unique_ptr<Towers>> towers;
         sf::Clock clock;
-        for(int i=0;i<5;i++)
+        for(int i=0;i<10;i++)
         {
 
             obiekty.emplace_back(new Mobs(Duch_tx));
@@ -286,11 +286,11 @@ int main()
                 */
                 if (event.type == sf::Event::MouseButtonPressed) {
                     if(event.mouseButton.button == sf::Mouse::Right) {
-                {
-                    int a=0;
-                    sf::Vector2i mouse_pos = sf::Mouse::getPosition(window);
-                     towers.emplace_back(new Towers(Tower1_tx));
-                    towers[tower_number]->setPosition(mouse_pos.x,mouse_pos.y);
+
+
+                   sf::Vector2i mouse_pos = sf::Mouse::getPosition(window);
+                    towers.emplace_back(new Towers(Tower1_tx));
+                   towers[tower_number]->setPosition(mouse_pos.x-40,mouse_pos.y-25);
                     std::cout<<"deploy";
                     tower_number++;
 
@@ -298,20 +298,11 @@ int main()
 
                 }
                 }
-                }
-             /*   if(hero.zycia<=0)
-                {
-                    std::cout<<"Koniec gry Koniec Zyc"<<std::endl;
-                    //return 1;
-                    window.close();
-                }
-                if(hero.punkty==500)
-                {
-                    std::cout<<"WYGRANA ! ! ! "<<std::endl;
-                    //return 1;
-                    window.close();
-                }
-            */
+
+
+
+      }//While end
+
                 window.clear();
                 window.draw(map1);
                 window.draw(hero);
@@ -322,6 +313,7 @@ int main()
                 for(unsigned int i=0;i<obiekty.size();i++)
                 {
                     window.draw(*obiekty[i]);
+
                 }
                 for(auto &p:obiekty)
                 {
@@ -329,6 +321,6 @@ int main()
                 }
                 window.display();
 
-            }
-}
-}
+
+}//window open
+}//main end
