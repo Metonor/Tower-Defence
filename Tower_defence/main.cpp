@@ -4,6 +4,7 @@
 #include <memory>
 #include<math.h>
 #include<cstdlib>
+#include <stdlib.h>
 
 class Global : public sf::Sprite{
 public:
@@ -22,23 +23,25 @@ public:
 class Mobs : public Global
 {public:
     int point=0;
-    int speed=50;
+    int speed=100;
+
     int HP=3;
     Mobs(sf::Texture &a)
     {
         setTexture(a);
-        setPosition(-45,310);
-        x=(rand()%30)*3;
+        setPosition(0,310);
+        x=(rand()%30)*4;
         y=0;
-        HP=3;
+        HP=4;
         setScale(1,1);
         type = typ::Mobs;
     }
     int Get_HP(){
+
         return HP;
     }
     void DMG(){
-        HP=HP-1;
+        this->HP=HP-1;
     }
     void Animuj(sf::Time &elapsed)
     {
@@ -84,6 +87,7 @@ class Mobs : public Global
                     point=6;
                 }
 
+
  move(x*elapsed.asSeconds(),y*elapsed.asSeconds());
         }
 
@@ -95,11 +99,11 @@ class Towers:public Global
     sf::Vector2f aim_dir_norm;
     Towers(sf::Texture &a)
     {
-        setRotation(90);
+
         setTexture(a);
         x=0;
         y=0;
-        setScale(0.5,0.5);
+        setScale(0.7,0.7);
         type = typ::Towers;
     }
     void Animuj(sf::Time &elapsed)
@@ -145,12 +149,22 @@ public:
     sf::Vector2f currV;
     float maxV;
 
-    Bullet(float radius =4.f) : currV(0.f,0.f), maxV(5.f)
+    Bullet(float radius =3.f) : currV(0.f,0.f), maxV(5.f)
     {
         this->bullet.setRadius(radius);
-        this->bullet.setFillColor(sf::Color::Magenta);
+        this->bullet.setFillColor(sf::Color::Red);
     }
 
+
+};
+
+class Base : public sf::Sprite{
+  public:
+  Base(const sf::Texture &texture) : sf::Sprite(texture)
+  {
+      this->setPosition(sf::Vector2f(680,230));
+      this->setScale(0.7,0.7);
+  };
 
 };
 
@@ -168,10 +182,17 @@ public:
 int main()
 {
     srand(time(NULL));
-    //Gold Points And hp
+    //Main instructions
     int gold=100;
     int cost=100;
-    std::cout<<gold;
+     int Enemy=5;
+     int E=0;
+     int tower_number = 0;
+     float time=0;
+     int wave=0;
+     int Base_HP=1;
+   std::cout<<"GOLD:::"<<std::endl<<gold<<std::endl;
+   std::cout<<"Base_HP:::"<<std::endl<<Base_HP<<std::endl;
     //
 
         sf::RenderWindow window(sf::VideoMode(800,600),"TD");
@@ -182,7 +203,7 @@ int main()
         sf::Texture Duch_tx;
         sf::Texture Knight_tx;
         sf::Texture Slime_tx;
-        sf::Texture Pacman_tx;
+        sf::Texture Base_tx;
         sf::Texture Tower1_tx;
         if (!Duch_tx.loadFromFile("tekstury/duch.png"))
         {
@@ -199,12 +220,12 @@ int main()
             std::cerr << "Could not load texture" << std::endl;
             return 1;
         }
-        if (!Pacman_tx.loadFromFile("tekstury/pacman.png"))
+        if (!Base_tx.loadFromFile("tekstury/Mech1B.png"))
         {
             std::cerr << "Could not load texture" << std::endl;
             return 1;
         }
-        if (!Tower1_tx.loadFromFile("tekstury/Mech1A.png"))
+        if (!Tower1_tx.loadFromFile("tekstury/Mech4.png"))
         {
             std::cerr << "Could not load texture" << std::endl;
             return 1;
@@ -214,15 +235,16 @@ int main()
             std::cerr << "Could not load texture" << std::endl;
             return 1;
         }
-
+// Stale obiekty
         Mapa map1(map_tx);
+        Base Baza(Base_tx);
 
 
         //__________________________________
 
         //
 
-        int tower_number = 0;
+
         //Vectors
         std::vector<std::unique_ptr<Global>> obiekty;
         std::vector<std::unique_ptr<Towers>> towers;
@@ -231,29 +253,31 @@ int main()
 
         //
 
-        sf::Clock clock;
-        for(int i=0;i<10;i++)
-        {
-
-            obiekty.emplace_back(new Mobs(Duch_tx));
-
-
-        }
-
+       sf::Clock clock1;
 
         while (window.isOpen())
             {
 
 
 
-                sf::Time elapsed = clock.restart();
+                sf::Time elapsed = clock1.restart();
+                time=time+elapsed.asSeconds();
+                if(time>0.5f && E<Enemy){
+                    obiekty.emplace_back(new Mobs(Duch_tx));
+                    time=0;
+                    E+=1;
+                }
+
+              // std::cout<<time<<std::endl;
+
+
                 //Shooting
                 Bullet b1;
 
 
                 Mouse_pos = sf::Vector2f(sf::Mouse::getPosition(window));
                 for(unsigned int i=0;i<towers.size();i++){
-                    towers[i]->Tower_Center= sf::Vector2f(towers[i]->getPosition().x-5,towers[i]->getPosition().y+40);
+                    towers[i]->Tower_Center= sf::Vector2f(towers[i]->getPosition().x+20,towers[i]->getPosition().y+40);
                     towers[i]->aim_dir= Mouse_pos-towers[i]->Tower_Center;
                     towers[i]->aim_dir_norm= towers[i]->aim_dir/ (sqrt((towers[i]->aim_dir.x)*(towers[i]->aim_dir.x)
                                                                   +((towers[i]->aim_dir.y)*towers[i]->aim_dir.y)));
@@ -262,10 +286,12 @@ int main()
 
 
                 //
-                //Events
+                //      Events
+
                 sf::Event event;
                 while (window.pollEvent(event))
                 {
+
                     if (event.type == sf::Event::Closed)
                         window.close();
 
@@ -273,8 +299,8 @@ int main()
 //Left click mouse
                     if (event.type == sf::Event::MouseButtonPressed) {
                         if(event.mouseButton.button == sf::Mouse::Left) {
-                            sf::Vector2i mouse_pos = sf::Mouse::getPosition(window);
-                            std::cout << "Mouse clicked: " << mouse_pos.x << ", " << mouse_pos.y << std::endl;
+                            //sf::Vector2i mouse_pos = sf::Mouse::getPosition(window);
+                         //   std::cout << "Mouse clicked: " << mouse_pos.x << ", " << mouse_pos.y << std::endl;
                             for(int i=0;i<tower_number;i++){
                             b1.bullet.setPosition(towers[i]->Tower_Center);
                             b1.currV= towers[i]->aim_dir_norm*b1.maxV;
@@ -284,31 +310,57 @@ int main()
 
                         }
                    }
+                    //Q click
+                    if(obiekty.size()==0){
+                    if (event.type == sf::Event::KeyReleased) {
+                        if (event.key.code == sf::Keyboard::Q) {
+                            std::cout << " Q" << std::endl;
+
+                    //Wave up
+
+
+                        Enemy+=2;
+                        E=0;
+                        wave+=1;
+                        std::cout<<"____________"<<std::endl<<"Wave:::"<<wave<<std::endl<<"____________"<<std::endl;
+
+                 }
+                }
+             }
 
 
 
-// Right click mouse
+
+
+// Right click mouse+
                 if (event.type == sf::Event::MouseButtonPressed) {
                     if(event.mouseButton.button == sf::Mouse::Right && gold>=cost) {
 
 
                    sf::Vector2i mouse_pos = sf::Mouse::getPosition(window);
                     towers.emplace_back(new Towers(Tower1_tx));
-                   towers[tower_number]->setPosition(mouse_pos.x+20,mouse_pos.y-20);
+                   towers[tower_number]->setPosition(mouse_pos.x-30,mouse_pos.y-20);
 
                     tower_number++;
-                    gold=gold-100;
-                    cost=cost+30;
+                    gold=gold-cost;
+                    cost=cost+50;
                     std::cout<<"Deploy!"<<std::endl<<gold<<std::endl;
 
 
                 }
                 }
-               // for(int c=0;c<obiekty.size();i++){
-              //  if(obiekty[c]->getGlobalBounds().intersects())
-//}
+
 
       }//Event while end
+                for(unsigned int i=0; i<obiekty.size();i++){
+                if(obiekty[i]->getPosition().x>730)
+                {
+                    Base_HP=Base_HP-1;
+                    obiekty.erase(obiekty.begin()+i);
+                    std::cout<<"Base HP::"<<Base_HP<<std::endl;
+
+                }
+                }
                 //ammo erase
                 for(size_t i=0;i<ammo.size();i++){
                     ammo[i].bullet.move(ammo[i].currV.x,ammo[i].currV.y);
@@ -327,7 +379,7 @@ int main()
                                 obiekty[k]->DMG();
                                 if(obiekty[k]->Get_HP()==0){
                                 obiekty.erase(obiekty.begin()+k);
-                                gold=gold+20;
+                                gold=gold+5;
                                 std::cout<<"Zloto::"<<gold<<std::endl;
                                 break;
                                 }
@@ -341,6 +393,7 @@ int main()
                 window.clear();
                 //Draw
                 window.draw(map1);
+                window.draw(Baza);
                 for(unsigned int i=0;i<towers.size();i++){
                     window.draw(*towers[i]);
                 }
@@ -357,6 +410,10 @@ int main()
                 for(auto &p:obiekty)
                 {
                     p->Animuj(elapsed);
+                }
+                if(Base_HP==0){
+                    window.close();
+                    std::cout<<"____________"<<std::endl<<"You Lose!!!"<<std::endl<<"____________";
                 }
                 window.display();
 
