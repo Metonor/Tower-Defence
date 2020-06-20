@@ -23,15 +23,15 @@ public:
 class Ghost : public Global
 {public:
     int point=0;
-    int speed=100;
+    int speed=120;
     int HP=4;
     Ghost(sf::Texture &a)
     {
         setTexture(a);
         setPosition(0,310);
-        x=70;
+        x=100;
         y=0;
-        HP=4;
+        HP=7;
         setScale(1,1);
         type = typ::Ghost;
     }
@@ -95,7 +95,7 @@ class Ghost : public Global
 class Knight : public Global
 {public:
     int point=0;
-    int speed=40;
+    int speed=60;
     int HP=15;
     Knight(sf::Texture &a)
     {
@@ -103,7 +103,7 @@ class Knight : public Global
         setPosition(0,300);
         x=50;
         y=0;
-        HP=15;
+        HP=20;
         setScale(0.7,0.7);
         type = typ::Knight;
     }
@@ -240,17 +240,9 @@ class Base : public sf::Sprite{
 
 };
 
-
-
+//
 //
 
-//
-
-//
-
-//
-
-//
 int main()
 {
     srand(time(NULL));
