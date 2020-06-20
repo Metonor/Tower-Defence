@@ -14,27 +14,26 @@ public:
     float x;
     float y;
     int HP;
-    enum typ{Towers,Mobs,Mapa};
+    enum typ{Towers,Ghost,Knight,Mapa};
     int type;
 
 
 };
 
-class Mobs : public Global
+class Ghost : public Global
 {public:
     int point=0;
     int speed=100;
-
-    int HP=3;
-    Mobs(sf::Texture &a)
+    int HP=4;
+    Ghost(sf::Texture &a)
     {
         setTexture(a);
         setPosition(0,310);
-        x=(rand()%30)*4;
+        x=70;
         y=0;
         HP=4;
         setScale(1,1);
-        type = typ::Mobs;
+        type = typ::Ghost;
     }
     int Get_HP(){
 
@@ -62,11 +61,84 @@ class Mobs : public Global
                 }
                 if((object_bounds.left > 310)&& point==2)
                 {
+
                     x=0;
                     y=speed;
                     point=3;
                 }
                 if((object_bounds.top > 370)&& point==3)
+                {
+                    x=speed;
+                    y=0;
+                    point=4;
+                }
+
+                if((object_bounds.left > 555)&& point==4)
+                {
+                    x=0;
+                    y=-speed;
+                    point=5;
+                }
+
+                if((object_bounds.top < 260)&& point==5)
+                {
+                    x=speed;
+                    y=0;
+                    point=6;
+                }
+
+
+ move(x*elapsed.asSeconds(),y*elapsed.asSeconds());
+        }
+
+};
+class Knight : public Global
+{public:
+    int point=0;
+    int speed=40;
+    int HP=15;
+    Knight(sf::Texture &a)
+    {
+        setTexture(a);
+        setPosition(0,300);
+        x=50;
+        y=0;
+        HP=15;
+        setScale(0.7,0.7);
+        type = typ::Knight;
+    }
+    int Get_HP(){
+
+        return HP;
+    }
+    void DMG(){
+        this->HP=HP-1;
+    }
+    void Animuj(sf::Time &elapsed)
+    {
+
+            auto object_bounds = this->getGlobalBounds();
+                if((object_bounds.left > 125)&& point==0)
+                {
+                    x=0;
+                    y=-speed;
+                    point=1;
+
+                }
+                if((object_bounds.top < 120)&& point==1)
+                {
+                    x=speed;
+                    y=0;
+                    point=2;
+                }
+                if((object_bounds.left > 310)&& point==2)
+                {
+
+                    x=0;
+                    y=speed;
+                    point=3;
+                }
+                if((object_bounds.top > 360)&& point==3)
                 {
                     x=speed;
                     y=0;
@@ -185,14 +257,17 @@ int main()
     //Main instructions
     int gold=100;
     int cost=100;
-     int Enemy=5;
+     int Enemy_G=5;
+     int Enemy_K=1;
      int E=0;
      int tower_number = 0;
      float time=0;
+     float time_d=0.6f;
      int wave=0;
      int Base_HP=1;
+   std::cout<<"_________________________"<<std::endl<<"Press Q to next wave when all enemies die:::"<<std::endl;
    std::cout<<"GOLD:::"<<std::endl<<gold<<std::endl;
-   std::cout<<"Base_HP:::"<<std::endl<<Base_HP<<std::endl;
+   std::cout<<"Base_HP:::"<<std::endl<<Base_HP<<std::endl<<"_________________________"<<std::endl;
     //
 
         sf::RenderWindow window(sf::VideoMode(800,600),"TD");
@@ -262,10 +337,20 @@ int main()
 
                 sf::Time elapsed = clock1.restart();
                 time=time+elapsed.asSeconds();
-                if(time>0.5f && E<Enemy){
-                    obiekty.emplace_back(new Mobs(Duch_tx));
+                //Enemies Generator
+                if(wave%2==0){
+                if(time>time_d && E<Enemy_G){
+                    obiekty.emplace_back(new Ghost(Duch_tx));
                     time=0;
                     E+=1;
+                }
+                }
+                else{
+                    if(time>time_d && E<Enemy_K){
+                        obiekty.emplace_back(new Knight(Knight_tx));
+                        time=0;
+                        E+=1;
+                    }
                 }
 
               // std::cout<<time<<std::endl;
@@ -312,17 +397,26 @@ int main()
                    }
                     //Q click
                     if(obiekty.size()==0){
+
                     if (event.type == sf::Event::KeyReleased) {
                         if (event.key.code == sf::Keyboard::Q) {
                             std::cout << " Q" << std::endl;
-
+                            if(time_d>=0.35f){
+                                time_d-=0.05f;
+                                //std::cout<<time_d;
+                            }
                     //Wave up
-
-
-                        Enemy+=2;
+                            if(wave%2==0){
+                        Enemy_G+=5;
                         E=0;
+                            }
+                            else{
+                                Enemy_K+=2;
+                                E=0;
+                            }
                         wave+=1;
                         std::cout<<"____________"<<std::endl<<"Wave:::"<<wave<<std::endl<<"____________"<<std::endl;
+
 
                  }
                 }
@@ -378,8 +472,14 @@ int main()
                                 ammo.erase(ammo.begin()+i);
                                 obiekty[k]->DMG();
                                 if(obiekty[k]->Get_HP()==0){
+                                 if(wave%2==0){
                                 obiekty.erase(obiekty.begin()+k);
                                 gold=gold+5;
+                                 }
+                                 else{
+                                      obiekty.erase(obiekty.begin()+k);
+                                      gold=gold+20;
+                                 }
                                 std::cout<<"Zloto::"<<gold<<std::endl;
                                 break;
                                 }
