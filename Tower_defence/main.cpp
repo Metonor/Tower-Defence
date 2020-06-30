@@ -1,10 +1,12 @@
 #include <iostream>
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <memory>
 #include<math.h>
 #include<cstdlib>
 #include <stdlib.h>
+
 
 class Global : public sf::Sprite{
 public:
@@ -256,7 +258,7 @@ int main()
      float time=0;
      float time_d=0.6f;
      int wave=0;
-     int Base_HP=1;
+     int Base_HP=5;
    std::cout<<"_________________________"<<std::endl<<"Press Q to next wave when all enemies die:::"<<std::endl;
    std::cout<<"GOLD:::"<<std::endl<<gold<<std::endl;
    std::cout<<"Base_HP:::"<<std::endl<<Base_HP<<std::endl<<"_________________________"<<std::endl;
@@ -302,6 +304,13 @@ int main()
             std::cerr << "Could not load texture" << std::endl;
             return 1;
         }
+        //Music
+
+           sf::Music music;
+           if (!music.openFromFile("music/Cyberpunk_Moonlight_ Sonata (online-audio-converter.com).ogg"))
+               return -1; // error
+           music.play();
+
 // Stale obiekty
         Mapa map1(map_tx);
         Base Baza(Base_tx);
@@ -333,6 +342,7 @@ int main()
                 if(wave%2==0){
                 if(time>time_d && E<Enemy_G){
                     obiekty.emplace_back(new Ghost(Duch_tx));
+
                     time=0;
                     E+=1;
                 }
@@ -392,18 +402,19 @@ int main()
 
                     if (event.type == sf::Event::KeyReleased) {
                         if (event.key.code == sf::Keyboard::Q) {
-                            std::cout << " Q" << std::endl;
-                            if(time_d>=0.35f){
+
+                            if(time_d>=0.25f){
                                 time_d-=0.05f;
                                 //std::cout<<time_d;
                             }
                     //Wave up
                             if(wave%2==0){
-                        Enemy_G+=5;
+                        Enemy_G+=8;
                         E=0;
+
                             }
                             else{
-                                Enemy_K+=2;
+                                Enemy_K+=3;
                                 E=0;
                             }
                         wave+=1;
@@ -458,6 +469,7 @@ int main()
                     {
                         //enemy collison
 
+                   auto it=obiekty.begin();
                         for(unsigned int k=0;k<obiekty.size();k++)
                     {
                             if(ammo[i].bullet.getGlobalBounds().intersects(obiekty[k]->getGlobalBounds())){
@@ -469,7 +481,7 @@ int main()
                                 gold=gold+5;
                                  }
                                  else{
-                                      obiekty.erase(obiekty.begin()+k);
+                                      obiekty.erase(it+k);
                                       gold=gold+20;
                                  }
                                 std::cout<<"Zloto::"<<gold<<std::endl;
@@ -477,6 +489,7 @@ int main()
                                 }
                                 }
                             }
+                        it=obiekty.begin();
 
 
                 }
